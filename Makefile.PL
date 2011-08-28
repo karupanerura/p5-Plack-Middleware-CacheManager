@@ -5,12 +5,16 @@ readme_from 'lib/Plack/Middleware/CacheManager.pm';
 readme_pod_from 'lib/Plack/Middleware/CacheManager.pm';
 githubmeta;
 
-# requires '';
+build_requires 'HTTP::Request';
+build_requires 'Plack::Test';
+build_requires 'Plack::Builder';
+build_requires 'Test::More';
+requires 'parent';
+requires 'Plack::Util::Accessor';
 
 tests 't/*.t';
 author_tests 'xt';
 
-build_requires 'Test::More';
 auto_set_repository;
 auto_include;
 WriteAll;
