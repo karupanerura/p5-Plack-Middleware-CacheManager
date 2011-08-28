@@ -5,7 +5,7 @@ our $VERSION = '0.01';
 
 use parent qw/Plack::Middleware/;
 use Plack::CacheManager;
-use Plack::Util::Accessor qw/set_enable get_enable cache_mger cache keygen work/;
+use Plack::Util::Accessor qw/set_enable get_enable cache_mger cache keygen work expire/;
 
 sub prepare_app {
     my $self = shift;
@@ -13,12 +13,14 @@ sub prepare_app {
     $self->work([]) unless defined $self->work;
     $self->get_enable( grep(/^set$/i, @{ $self->work() }) ) unless defined $self->get_enable;
     $self->set_enable( grep(/^get$/i, @{ $self->work() }) ) unless defined $self->set_enable;
+    $self->expire(10) unless defined $self->expire;
     unless ( $self->cache_mger ) {
         $self->cache_mger(
             Plack::CacheManager->new(
                 keygen     => $self->keygen,
                 cache      => $self->cache,
                 get_enable => $self->get_enable,
+                expire     => $self->expire,
             )
         );
     }

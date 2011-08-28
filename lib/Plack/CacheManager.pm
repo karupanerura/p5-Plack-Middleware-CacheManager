@@ -2,7 +2,7 @@ package Plack::CacheManager;
 use strict;
 use warnings;
 
-use Plack::Util::Accessor qw/cache keygen keygen_ref get_enable/;
+use Plack::Util::Accessor qw/cache keygen keygen_ref get_enable expire/;
 
 my %keygen = ();
 sub new {
@@ -20,7 +20,8 @@ sub set {
     my($self, $env, $res) = @_;
 
     my $key = $self->key($env);
-    $self->cache->set("psgi_raw.$key" => $res) if $self->get_enable;
+
+    $self->cache->set("psgi_raw.$key" => $res, $self->expire) if $self->get_enable;
     $self->cache->set($key => $res->[2]);
 }
 
