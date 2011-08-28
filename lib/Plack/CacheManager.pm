@@ -22,7 +22,7 @@ sub set {
     my $key = $self->key($env);
 
     $self->cache->set("psgi_raw.$key" => $res, $self->expire) if $self->get_enable;
-    $self->cache->set($key => $res->[2]);
+    $self->cache->set($key => join('', @{$res->[2]}), $self->expire);
 }
 
 sub get {
