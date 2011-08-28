@@ -1,11 +1,25 @@
 NAME
-    Plack::Middleware::CacheManager -
+    Plack::Middleware::CacheManager - Content cache manager
 
 SYNOPSIS
-      use Plack::Middleware::CacheManager;
+      use Plack::Builder;
+      use Cache::Memcached::Fast;
+
+      builder {
+          enable 'CacheManager' => +{
+              cache  => Cache::Memcached::Fast->new(%memd_opt),
+              keygen => sub {
+                  my $env = shift;
+                  return $env->{REQUEST_URI};
+              },
+              expire => 60,
+              work   => ['set'],
+          };
+          $app;
+      };
 
 DESCRIPTION
-    Plack::Middleware::CacheManager is
+    Plack::Middleware::CacheManager is content cache manager.
 
 AUTHOR
     Kenta Sato <karupa@cpan.org>

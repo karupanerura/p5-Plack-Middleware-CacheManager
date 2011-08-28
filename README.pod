@@ -1,14 +1,28 @@
 =head1 NAME
 
-Plack::Middleware::CacheManager -
+Plack::Middleware::CacheManager - Content cache manager
 
 =head1 SYNOPSIS
 
-  use Plack::Middleware::CacheManager;
+  use Plack::Builder;
+  use Cache::Memcached::Fast;
+
+  builder {
+      enable 'CacheManager' => +{
+          cache  => Cache::Memcached::Fast->new(%memd_opt),
+          keygen => sub {
+              my $env = shift;
+              return $env->{REQUEST_URI};
+          },
+          expire => 60,
+          work   => ['set'],
+      };
+      $app;
+  };
 
 =head1 DESCRIPTION
 
-Plack::Middleware::CacheManager is
+Plack::Middleware::CacheManager is content cache manager.
 
 =head1 AUTHOR
 

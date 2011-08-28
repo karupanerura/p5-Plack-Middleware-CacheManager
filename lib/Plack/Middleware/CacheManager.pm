@@ -4,31 +4,41 @@ use warnings;
 our $VERSION = '0.01';
 
 use parent qw/Plack::Middleware/;
-use Plack::CacheManager:
-use Plack::Util qw/TRUE FALSE/;
-use Plack::Util::Accessor qw/set_enable get_enable cache_mger cache work/;
+use Plack::CacheManager;
+use Plack::Util::Accessor qw/set_enable get_enable cache_mger cache keygen work/;
 
 sub prepare_app {
     my $self = shift;
 
-    $self->cache_mger( Plack::CacheManager->new($self->cache) ) unless $self->cache_mger;
-    $self->get_enable( grep(/^set$/i, @{$self->work}) ? TRUE : FALSE ) unless $self->get_enable;
-    $self->set_enable( grep(/^get$/i, @{$self->work}) ? TRUE : FALSE ) unless $self->set_enable;
+    $self->work([]) unless defined $self->work;
+    $self->get_enable( grep(/^set$/i, @{ $self->work() }) ) unless defined $self->get_enable;
+    $self->set_enable( grep(/^get$/i, @{ $self->work() }) ) unless defined $self->set_enable;
+    unless ( $self->cache_mger ) {
+        $self->cache_mger(
+            Plack::CacheManager->new(
+                keygen     => $self->keygen,
+                cache      => $self->cache,
+                get_enable => $self->get_enable,
+            )
+        );
+    }
 }
 
 sub call {
     my($self, $env) = @_;
 
     return $self->cache_mger->get($env) if $self->get_enable;
+    $env->{'psgix.cache_mger'} = $self->cache_mger;
 
     my $res = $self->app->($env);
 
-    if (
+    if ( # don't cache streaming content
         $self->set_enable &&
         (ref($res) eq 'ARRAY')  &&
+        ($res->[0] == 200) &&
         (ref($res->[2]) eq 'ARRAY')
     ) {
-        $self->cache_mger->set($res);
+        $self->cache_mger->set($env, $res);
     }
 
     return $res;
@@ -48,10 +58,10 @@ Plack::Middleware::CacheManager - Content cache manager
 
   builder {
       enable 'CacheManager' => +{
-          cache => Cache::Memcached::Fast->new(%memd_opt),
-          key   => sub {
+          cache  => Cache::Memcached::Fast->new(%memd_opt),
+          keygen => sub {
               my $env = shift;
-              return sprintf('%s://%s%s', $env->{'psgi.url_scheme'}, $env->{HTTP_HOST}, $env->{REQUEST_URI});
+              return $env->{REQUEST_URI};
           },
           expire => 60,
           work   => ['set'],
@@ -61,7 +71,7 @@ Plack::Middleware::CacheManager - Content cache manager
 
 =head1 DESCRIPTION
 
-Plack::Middleware::CacheManager is
+Plack::Middleware::CacheManager is content cache manager.
 
 =head1 AUTHOR
 
