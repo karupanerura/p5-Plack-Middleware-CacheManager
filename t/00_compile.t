@@ -1,4 +1,7 @@
 use strict;
 use Test::More tests => 1;
 
-BEGIN { use_ok 'Plack::Middleware::CacheManager' }
+BEGIN {
+    use_ok 'Plack::Middleware::CacheManager';
+    use_ok 'Plack::CacheManager';
+}
