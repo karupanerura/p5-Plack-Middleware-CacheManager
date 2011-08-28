@@ -27,7 +27,10 @@ sub prepare_app {
 sub call {
     my($self, $env) = @_;
 
-    return $self->cache_mger->get($env) if $self->get_enable;
+    if ($self->get_enable) {
+        my $res = $self->cache_mger->get($env);
+        return $res if($res);
+    }
     $env->{'psgix.cache_mger'} = $self->cache_mger;
 
     my $res = $self->app->($env);
